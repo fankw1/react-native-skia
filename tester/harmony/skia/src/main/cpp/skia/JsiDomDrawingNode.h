@@ -58,7 +58,7 @@ protected:
         draw(localContext.get());
       }
     }
-
+        
 #if SKIA_DOM_DEBUG
     printDebugInfo("End Draw", 1);
 #endif

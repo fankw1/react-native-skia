@@ -1,7 +1,16 @@
 /*
- * Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
- * Use of this source code is governed by a MIT license that can be
- * found in the LICENSE file.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "RNSkHarmonyVideo.h"
@@ -308,7 +317,7 @@ void RNSkHarmonyVideo::DecVideoInputThread() {
         // 送入输入队列进行解码
 
         if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
-//             bufferInfo.attr.flags = AVCODEC_BUFFER_FLAGS_NONE;
+            //             bufferInfo.attr.flags = AVCODEC_BUFFER_FLAGS_NONE;
             videoDecoder_->Flush(bufferInfo);
             demuxer_->ReadSample(reinterpret_cast<OH_AVBuffer *>(bufferInfo.buffer), bufferInfo.attr);
             DLOG(ERROR) << "Catch EOS, thread out";
@@ -358,21 +367,21 @@ void RNSkHarmonyVideo::DecVideoOutputThread() {
         CodecBufferInfo bufferInfo = videoSignal_->outputBufferInfoQueue_.front();
         videoSignal_->outputBufferInfoQueue_.pop();
         //         触碰到EOS(End of Stream)状态, 此时编码器不再接受新输入
-//         if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
-//             DLOG(ERROR) << "Catch EOS, thread out";
-//             break;
-//         }
+        //         if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
+        //             DLOG(ERROR) << "Catch EOS, thread out";
+        //             break;
+        //         }
         // 触碰到EOS(End of Stream)状态, 此时编码器不再接受新输入
-            if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
-                DLOG(INFO) << "Catch EOS, flushing decoder and continuing";
-                // 调用刷新解码器的方法
-                videoDecoder_->Flush(bufferInfo);
-                // 清空队列
-//                     while (!videoSignal_->outputBufferInfoQueue_.empty()) {
-//                         videoSignal_->outputBufferInfoQueue_.pop();
-//                     }
-                continue; // 继续循环
-            }
+        if (bufferInfo.attr.flags & AVCODEC_BUFFER_FLAGS_EOS) {
+            DLOG(INFO) << "Catch EOS, flushing decoder and continuing";
+            // 调用刷新解码器的方法
+            videoDecoder_->Flush(bufferInfo);
+            // 清空队列
+            //                     while (!videoSignal_->outputBufferInfoQueue_.empty()) {
+            //                         videoSignal_->outputBufferInfoQueue_.pop();
+            //                     }
+            continue; // 继续循环
+        }
         videoSignal_->outputFrameCount_++;
         frameCount = videoSignal_->outputFrameCount_;
         milliseconds = bufferInfo.attr.pts / 1000;
@@ -383,6 +392,9 @@ void RNSkHarmonyVideo::DecVideoOutputThread() {
         lock.unlock();
         OH_AVBuffer *Buffer = reinterpret_cast<OH_AVBuffer *>(bufferInfo.buffer);
         nativeBuffer = OH_AVBuffer_GetNativeBuffer(Buffer);
+
+        nativebufferqueue.push(nativeBuffer);
+        nativebufferstack.push(nativeBuffer);
 
         int32_t ret = videoDecoder_->FreeOutputData(bufferInfo.bufferIndex, true);
         if (ret != AV_ERR_OK) {
@@ -554,14 +566,17 @@ void RNSkHarmonyVideo::DecAudioOutputThread() {
 sk_sp<SkImage> RNSkHarmonyVideo::nextImage(double *timeStamp) {
     DLOG(INFO) << "nextImage enter  转换 第 " << frameCount << " 帧, nativeBuffer: " << nativeBuffer;
     OH_NativeBuffer_Config config;
-    if (nativeBuffer) {
-        OH_NativeBuffer_GetConfig(nativeBuffer, &config);
-        return SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(nativeBuffer);
-        DLOG(INFO) << "nextImage OH_NativeBuffer_Config width : " << config.width << " height : " << config.height
-                   << " pixelFormat : " << config.format << " usage :" << config.usage << " stride :" << config.stride;
-    } else {
-        return nullptr;
-    }
+
+    //------------queue作为帧储存器-----------
+        if (!nativebufferqueue.empty()) {
+            OH_NativeBuffer *BufferInfo = nativebufferqueue.front();
+            nativebufferqueue.pop();
+            //OH_NativeBuffer_GetConfig(BufferInfo, &config);
+            return SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(BufferInfo);
+        } else {
+            //OH_NativeBuffer_GetConfig(nativeBuffer, &config);
+            return SkiaOpenGLSurfaceFactory::makeImageFromHardwareBuffer(nativeBuffer);
+        }
 }
 
 double RNSkHarmonyVideo::duration() {

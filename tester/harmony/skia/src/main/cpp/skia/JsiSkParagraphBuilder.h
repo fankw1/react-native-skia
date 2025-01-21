@@ -46,9 +46,7 @@ public:
 
     JSI_HOST_FUNCTION(addText) {
         auto text = getArgumentAsString(runtime, arguments, count, 0).utf8(runtime);
-        auto tctr = text.c_str();
         _builder->addText(text.c_str());
-        LOG(ERROR) << "liwang c++ ParagraphBuilder.addText 添加文本---->" << tctr;
         return thisValue.asObject(runtime);
     }
 

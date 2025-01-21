@@ -11,6 +11,8 @@ namespace RNSkia {
 DrawingContext::DrawingContext(std::shared_ptr<SkPaint> paint) {
   _declarationContext = std::make_unique<DeclarationContext>();
   paint->setAntiAlias(true);
+//     paint->setColor(SK_ColorGREEN);
+//     paint->setStrokeWidth(10);
   _paints.push_back(paint);
 }
 

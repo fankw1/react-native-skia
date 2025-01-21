@@ -36,6 +36,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <glog/logging.h>
 
 #ifndef SK_SUPPORT_LEGACY_GETTOTALMATRIX
 #define SK_SUPPORT_LEGACY_GETTOTALMATRIX

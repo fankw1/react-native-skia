@@ -1,8 +1,8 @@
 #pragma once
 
 /* Enable output of dom trees and paint contexts */
-#define SKIA_DOM_DEBUG 0
-#define SKIA_DOM_DEBUG_VERBOSE 0
+#define SKIA_DOM_DEBUG 1
+#define SKIA_DOM_DEBUG_VERBOSE 1
 
 #include <memory>
 

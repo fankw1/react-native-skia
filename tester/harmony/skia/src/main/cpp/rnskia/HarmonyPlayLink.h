@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2024 Huawei Device Co., Ltd. All rights reserved
- * Use of this source code is governed by a MIT license that can be
- * found in the LICENSE file.
- */
-
 #ifndef HARMONY_PLAY_LINK_H
 #define HARMONY_PLAY_LINK_H
 
@@ -17,7 +11,7 @@
 namespace RNSkia {
 class PlayLink {
 public:
-    PlayLink(std::function<void(double)> CallBack, double interval_ms = 16.667);
+    PlayLink(std::function<void(double)> CallBack, double interval_ms = 0);
     ~PlayLink() {}
 
     void startDrawLoop();
